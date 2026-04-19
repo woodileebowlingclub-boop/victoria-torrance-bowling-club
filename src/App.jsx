@@ -22,7 +22,7 @@ const styles = {
   },
 
   logo: {
-    width: "250px",
+    width: "400px",
     height: "auto",
     marginBottom: "20px",
   },
