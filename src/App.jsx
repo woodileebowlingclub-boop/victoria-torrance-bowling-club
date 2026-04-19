@@ -14,29 +14,30 @@ const styles = {
   container: {
     textAlign: "center",
     background: "#ffffff",
-    padding: "30px",
-    borderRadius: "16px",
+    padding: "40px 20px",
+    borderRadius: "20px",
     width: "90%",
-    maxWidth: "500px",
-    boxShadow: "0 6px 20px rgba(0,0,0,0.2)",
+    maxWidth: "600px",
+    boxShadow: "0 8px 25px rgba(0,0,0,0.2)",
   },
 
   logo: {
-    width: "400px",
+    width: "260px", // KEEP SAME SIZE
     height: "auto",
-    marginBottom: "20px",
+    marginBottom: "25px",
   },
 
   title: {
-    fontSize: "24px",
+    fontSize: "32px",        // BIGGER (main fix)
     fontWeight: "bold",
     color: "#0b3d91",
-    marginBottom: "10px",
+    marginBottom: "12px",
+    lineHeight: "1.2",
   },
 
   subtitle: {
-    fontSize: "16px",
-    color: "#555",
+    fontSize: "20px",        // BIGGER (balanced under title)
+    color: "#444",
   },
 };
 
@@ -44,7 +45,7 @@ export default function App() {
   return (
     <div style={styles.page}>
       <div style={styles.container}>
-        
+
         {/* LOGO */}
         <img src={logo} alt="Club Logo" style={styles.logo} />
 
