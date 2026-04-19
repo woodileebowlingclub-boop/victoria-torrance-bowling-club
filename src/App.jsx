@@ -22,7 +22,7 @@ const styles = {
     padding: "40px 20px",
     borderRadius: "20px",
     width: "90%",
-    maxWidth: "700px",
+    maxWidth: "720px",
     boxShadow: "0 8px 25px rgba(0,0,0,0.2)",
   },
 
@@ -33,7 +33,7 @@ const styles = {
   },
 
   title: {
-    fontSize: "32px",
+    fontSize: "36px",
     fontWeight: "bold",
     color: "#0b3d91",
     marginBottom: "12px",
@@ -41,7 +41,7 @@ const styles = {
   },
 
   subtitle: {
-    fontSize: "20px",
+    fontSize: "24px",
     color: "#444",
     marginBottom: "30px",
   },
@@ -66,7 +66,7 @@ const styles = {
   }),
 
   panel: {
-    maxWidth: "500px",
+    maxWidth: "520px",
     margin: "0 auto",
     textAlign: "left",
     background: "#f8fbff",
@@ -131,10 +131,16 @@ const styles = {
     marginTop: "8px",
     textAlign: "center",
   },
+
+  centreText: {
+    textAlign: "center",
+    margin: 0,
+    fontSize: "18px",
+  },
 };
 
 export default function App() {
-  const [memberPin, setMemberPin] = useState(DEFAULT_MEMBER_PIN);
+  const [memberPin] = useState(DEFAULT_MEMBER_PIN);
   const [adminPin, setAdminPin] = useState(DEFAULT_ADMIN_PIN);
 
   const [enteredMemberPin, setEnteredMemberPin] = useState("");
@@ -150,31 +156,49 @@ export default function App() {
   const [confirmAdminPinInput, setConfirmAdminPinInput] = useState("");
 
   useEffect(() => {
-    const savedMemberPin = localStorage.getItem("victoria_member_pin");
     const savedAdminPin = localStorage.getItem("victoria_admin_pin");
-
-    if (savedMemberPin) setMemberPin(savedMemberPin);
     if (savedAdminPin) setAdminPin(savedAdminPin);
   }, []);
 
   const handleMemberLogin = () => {
     if (enteredMemberPin === memberPin) {
       setLoggedIn(true);
-      setMessage("");
       setEnteredMemberPin("");
+      setMessage("");
     } else {
       setMessage("Incorrect members PIN");
     }
   };
 
+  const handleMemberLogout = () => {
+    setLoggedIn(false);
+    setAdminUnlocked(false);
+    setEnteredMemberPin("");
+    setEnteredAdminPin("");
+    setCurrentAdminPinInput("");
+    setNewAdminPinInput("");
+    setConfirmAdminPinInput("");
+    setTab("home");
+    setMessage("");
+  };
+
   const handleAdminLogin = () => {
     if (enteredAdminPin === adminPin) {
       setAdminUnlocked(true);
-      setMessage("");
       setEnteredAdminPin("");
+      setMessage("");
     } else {
       setMessage("Wrong admin PIN");
     }
+  };
+
+  const handleAdminLogout = () => {
+    setAdminUnlocked(false);
+    setEnteredAdminPin("");
+    setCurrentAdminPinInput("");
+    setNewAdminPinInput("");
+    setConfirmAdminPinInput("");
+    setMessage("");
   };
 
   const handleChangeAdminPin = () => {
@@ -204,17 +228,7 @@ export default function App() {
     setCurrentAdminPinInput("");
     setNewAdminPinInput("");
     setConfirmAdminPinInput("");
-
     setMessage("Admin PIN changed successfully.");
-  };
-
-  const handleAdminLogout = () => {
-    setAdminUnlocked(false);
-    setEnteredAdminPin("");
-    setCurrentAdminPinInput("");
-    setNewAdminPinInput("");
-    setConfirmAdminPinInput("");
-    setMessage("");
   };
 
   if (!loggedIn) {
@@ -265,14 +279,15 @@ export default function App() {
           <button style={styles.tab(tab === "admin")} onClick={() => setTab("admin")}>
             Admin
           </button>
+          <button style={styles.tab(false)} onClick={handleMemberLogout}>
+            Logout
+          </button>
         </div>
 
         {tab === "home" && (
           <div style={styles.panel}>
             <h2 style={styles.heading}>Home</h2>
-            <p style={{ textAlign: "center", margin: 0 }}>
-              Welcome to Victoria Torrance Bowling Club.
-            </p>
+            <p style={styles.centreText}>Welcome to Victoria Torrance Bowling Club.</p>
           </div>
         )}
 
