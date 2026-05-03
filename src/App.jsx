@@ -1,3 +1,6 @@
+Paste this as your full `App.jsx`:
+
+```jsx
 import React, { useEffect, useMemo, useState } from "react";
 import logo from "./assets/logo.png";
 
@@ -82,9 +85,11 @@ const styles = {
   },
 
   subHeading: {
-    marginTop: 0,
+    marginTop: "18px",
     marginBottom: "12px",
     color: "#0b3d91",
+    borderBottom: "2px solid #d8e4f7",
+    paddingBottom: "6px",
   },
 
   input: {
@@ -203,6 +208,10 @@ function nextId(items) {
   return items.length ? Math.max(...items.map((x) => x.id)) + 1 : 1;
 }
 
+function normaliseSection(section) {
+  return String(section || "").trim().toLowerCase();
+}
+
 export default function App() {
   const [adminPin, setAdminPin] = useState(DEFAULT_ADMIN_PIN);
   const [enteredAdminPin, setEnteredAdminPin] = useState("");
@@ -270,6 +279,22 @@ export default function App() {
       return aKey.localeCompare(bKey);
     });
   }, [diaryItems]);
+
+  const groupedMembers = useMemo(() => {
+    return {
+      gents: members.filter((m) => normaliseSection(m.section).includes("gent")),
+      ladies: members.filter((m) => normaliseSection(m.section).includes("lad")),
+      social: members.filter((m) => normaliseSection(m.section).includes("social")),
+      other: members.filter((m) => {
+        const section = normaliseSection(m.section);
+        return (
+          !section.includes("gent") &&
+          !section.includes("lad") &&
+          !section.includes("social")
+        );
+      }),
+    };
+  }, [members]);
 
   const handleAdminLogin = () => {
     if (enteredAdminPin === adminPin) {
@@ -342,7 +367,9 @@ export default function App() {
     }
 
     if (diaryForm.id) {
-      setDiaryItems((prev) => prev.map((x) => (x.id === diaryForm.id ? diaryForm : x)));
+      setDiaryItems((prev) =>
+        prev.map((x) => (x.id === diaryForm.id ? diaryForm : x))
+      );
     } else {
       setDiaryItems((prev) => [...prev, { ...diaryForm, id: nextId(prev) }]);
     }
@@ -358,7 +385,9 @@ export default function App() {
     }
 
     if (memberForm.id) {
-      setMembers((prev) => prev.map((x) => (x.id === memberForm.id ? memberForm : x)));
+      setMembers((prev) =>
+        prev.map((x) => (x.id === memberForm.id ? memberForm : x))
+      );
     } else {
       setMembers((prev) => [...prev, { ...memberForm, id: nextId(prev) }]);
     }
@@ -374,7 +403,9 @@ export default function App() {
     }
 
     if (officeForm.id) {
-      setOfficeBearers((prev) => prev.map((x) => (x.id === officeForm.id ? officeForm : x)));
+      setOfficeBearers((prev) =>
+        prev.map((x) => (x.id === officeForm.id ? officeForm : x))
+      );
     } else {
       setOfficeBearers((prev) => [...prev, { ...officeForm, id: nextId(prev) }]);
     }
@@ -394,7 +425,10 @@ export default function App() {
         prev.map((x) => (x.id === noticeForm.id ? noticeForm : x))
       );
     } else {
-      setNoticeboardItems((prev) => [...prev, { ...noticeForm, id: nextId(prev) }]);
+      setNoticeboardItems((prev) => [
+        ...prev,
+        { ...noticeForm, id: nextId(prev) },
+      ]);
     }
 
     resetNoticeForm();
@@ -412,19 +446,40 @@ export default function App() {
         prev.map((x) => (x.id === tournamentForm.id ? tournamentForm : x))
       );
     } else {
-      setTournamentItems((prev) => [...prev, { ...tournamentForm, id: nextId(prev) }]);
+      setTournamentItems((prev) => [
+        ...prev,
+        { ...tournamentForm, id: nextId(prev) },
+      ]);
     }
 
     resetTournamentForm();
     setMessage("Tournament updated.");
   };
 
+  const renderMemberCard = (item) => (
+    <div key={item.id} style={styles.card}>
+      <strong>{item.name}</strong>
+
+      {item.phone && (
+        <p style={styles.rowText}>
+          <strong>Phone:</strong> {item.phone}
+        </p>
+      )}
+
+      {item.whatsapp && (
+        <p style={styles.rowText}>
+          <strong>WhatsApp:</strong> {item.whatsapp}
+        </p>
+      )}
+    </div>
+  );
+
   return (
     <div style={styles.page}>
       <div style={styles.container}>
         <img src={logo} alt="Club Logo" style={styles.logo} />
 
-        <div style={styles.title}>Victoria Torrance Bowling Club</div>
+        <div style={styles.title}>Victoria Bowling Club, Torrance</div>
         <div style={styles.subtitle}>Welcome to the club app</div>
 
         <div style={styles.tabs}>
@@ -446,7 +501,10 @@ export default function App() {
           >
             Noticeboard
           </button>
-          <button style={styles.tab(tab === "tournament")} onClick={() => setTab("tournament")}>
+          <button
+            style={styles.tab(tab === "tournament")}
+            onClick={() => setTab("tournament")}
+          >
             Tournament
           </button>
           <button style={styles.tab(tab === "admin")} onClick={() => setTab("admin")}>
@@ -457,7 +515,9 @@ export default function App() {
         {tab === "home" && (
           <div style={styles.panel}>
             <h2 style={styles.heading}>Home</h2>
-            <p style={styles.centreText}>Welcome to Victoria Torrance Bowling Club.</p>
+            <p style={styles.centreText}>
+              Welcome to Victoria Bowling Club, Torrance.
+            </p>
           </div>
         )}
 
@@ -470,8 +530,16 @@ export default function App() {
               sortedDiary.map((item) => (
                 <div key={item.id} style={styles.card}>
                   <strong>{item.title}</strong>
-                  {item.date && <p style={styles.rowText}><strong>Date:</strong> {item.date}</p>}
-                  {item.time && <p style={styles.rowText}><strong>Time:</strong> {item.time}</p>}
+                  {item.date && (
+                    <p style={styles.rowText}>
+                      <strong>Date:</strong> {item.date}
+                    </p>
+                  )}
+                  {item.time && (
+                    <p style={styles.rowText}>
+                      <strong>Time:</strong> {item.time}
+                    </p>
+                  )}
                   {item.details && <p style={styles.rowText}>{item.details}</p>}
                 </div>
               ))
@@ -482,23 +550,39 @@ export default function App() {
         {tab === "members" && (
           <div style={styles.panel}>
             <h2 style={styles.heading}>Members</h2>
+
             {members.length === 0 ? (
               <p style={styles.muted}>No members added yet.</p>
             ) : (
-              members.map((item) => (
-                <div key={item.id} style={styles.card}>
-                  <strong>{item.name}</strong>
-                  {item.section && (
-                    <p style={styles.rowText}><strong>Section:</strong> {item.section}</p>
-                  )}
-                  {item.phone && (
-                    <p style={styles.rowText}><strong>Phone:</strong> {item.phone}</p>
-                  )}
-                  {item.whatsapp && (
-                    <p style={styles.rowText}><strong>WhatsApp:</strong> {item.whatsapp}</p>
-                  )}
-                </div>
-              ))
+              <>
+                {groupedMembers.gents.length > 0 && (
+                  <>
+                    <h3 style={styles.subHeading}>Gents Section</h3>
+                    {groupedMembers.gents.map(renderMemberCard)}
+                  </>
+                )}
+
+                {groupedMembers.ladies.length > 0 && (
+                  <>
+                    <h3 style={styles.subHeading}>Ladies Section</h3>
+                    {groupedMembers.ladies.map(renderMemberCard)}
+                  </>
+                )}
+
+                {groupedMembers.social.length > 0 && (
+                  <>
+                    <h3 style={styles.subHeading}>Social Members</h3>
+                    {groupedMembers.social.map(renderMemberCard)}
+                  </>
+                )}
+
+                {groupedMembers.other.length > 0 && (
+                  <>
+                    <h3 style={styles.subHeading}>Other Members</h3>
+                    {groupedMembers.other.map(renderMemberCard)}
+                  </>
+                )}
+              </>
             )}
           </div>
         )}
@@ -512,12 +596,18 @@ export default function App() {
               officeBearers.map((item) => (
                 <div key={item.id} style={styles.card}>
                   <strong>{item.role}</strong>
-                  <p style={styles.rowText}><strong>Name:</strong> {item.name}</p>
+                  <p style={styles.rowText}>
+                    <strong>Name:</strong> {item.name}
+                  </p>
                   {item.phone && (
-                    <p style={styles.rowText}><strong>Phone:</strong> {item.phone}</p>
+                    <p style={styles.rowText}>
+                      <strong>Phone:</strong> {item.phone}
+                    </p>
                   )}
                   {item.whatsapp && (
-                    <p style={styles.rowText}><strong>WhatsApp:</strong> {item.whatsapp}</p>
+                    <p style={styles.rowText}>
+                      <strong>WhatsApp:</strong> {item.whatsapp}
+                    </p>
                   )}
                 </div>
               ))
@@ -534,7 +624,11 @@ export default function App() {
               noticeboardItems.map((item) => (
                 <div key={item.id} style={styles.card}>
                   <strong>{item.title}</strong>
-                  {item.date && <p style={styles.rowText}><strong>Date:</strong> {item.date}</p>}
+                  {item.date && (
+                    <p style={styles.rowText}>
+                      <strong>Date:</strong> {item.date}
+                    </p>
+                  )}
                   <p style={styles.rowText}>{item.message}</p>
                 </div>
               ))
@@ -551,7 +645,11 @@ export default function App() {
               tournamentItems.map((item) => (
                 <div key={item.id} style={styles.card}>
                   <strong>{item.title}</strong>
-                  {item.date && <p style={styles.rowText}><strong>Date:</strong> {item.date}</p>}
+                  {item.date && (
+                    <p style={styles.rowText}>
+                      <strong>Date:</strong> {item.date}
+                    </p>
+                  )}
                   {item.details && <p style={styles.rowText}>{item.details}</p>}
                 </div>
               ))
@@ -621,36 +719,50 @@ export default function App() {
 
                 <div style={styles.adminBox}>
                   <h3 style={styles.subHeading}>Diary</h3>
+
                   <input
                     type="text"
                     placeholder="Title"
                     value={diaryForm.title}
-                    onChange={(e) => setDiaryForm({ ...diaryForm, title: e.target.value })}
+                    onChange={(e) =>
+                      setDiaryForm({ ...diaryForm, title: e.target.value })
+                    }
                     style={styles.input}
                   />
+
                   <input
                     type="text"
                     placeholder="Date"
                     value={diaryForm.date}
-                    onChange={(e) => setDiaryForm({ ...diaryForm, date: e.target.value })}
+                    onChange={(e) =>
+                      setDiaryForm({ ...diaryForm, date: e.target.value })
+                    }
                     style={styles.input}
                   />
+
                   <input
                     type="text"
                     placeholder="Time"
                     value={diaryForm.time}
-                    onChange={(e) => setDiaryForm({ ...diaryForm, time: e.target.value })}
+                    onChange={(e) =>
+                      setDiaryForm({ ...diaryForm, time: e.target.value })
+                    }
                     style={styles.input}
                   />
+
                   <textarea
                     placeholder="Details"
                     value={diaryForm.details}
-                    onChange={(e) => setDiaryForm({ ...diaryForm, details: e.target.value })}
+                    onChange={(e) =>
+                      setDiaryForm({ ...diaryForm, details: e.target.value })
+                    }
                     style={styles.textarea}
                   />
+
                   <button onClick={saveDiary} style={styles.smallButton}>
                     {diaryForm.id ? "Update Diary Item" : "Add Diary Item"}
                   </button>
+
                   <button onClick={resetDiaryForm} style={styles.deleteButton}>
                     Clear
                   </button>
@@ -665,9 +777,12 @@ export default function App() {
                         >
                           Edit
                         </button>
+
                         <button
                           onClick={() =>
-                            setDiaryItems((prev) => prev.filter((x) => x.id !== item.id))
+                            setDiaryItems((prev) =>
+                              prev.filter((x) => x.id !== item.id)
+                            )
                           }
                           style={styles.deleteButton}
                         >
@@ -680,27 +795,40 @@ export default function App() {
 
                 <div style={styles.adminBox}>
                   <h3 style={styles.subHeading}>Members</h3>
+
                   <input
                     type="text"
                     placeholder="Name"
                     value={memberForm.name}
-                    onChange={(e) => setMemberForm({ ...memberForm, name: e.target.value })}
+                    onChange={(e) =>
+                      setMemberForm({ ...memberForm, name: e.target.value })
+                    }
                     style={styles.input}
                   />
-                  <input
-                    type="text"
-                    placeholder="Section"
+
+                  <select
                     value={memberForm.section}
-                    onChange={(e) => setMemberForm({ ...memberForm, section: e.target.value })}
+                    onChange={(e) =>
+                      setMemberForm({ ...memberForm, section: e.target.value })
+                    }
                     style={styles.input}
-                  />
+                  >
+                    <option value="">Select Section</option>
+                    <option value="Gents">Gents</option>
+                    <option value="Ladies">Ladies</option>
+                    <option value="Social">Social</option>
+                  </select>
+
                   <input
                     type="text"
                     placeholder="Phone"
                     value={memberForm.phone}
-                    onChange={(e) => setMemberForm({ ...memberForm, phone: e.target.value })}
+                    onChange={(e) =>
+                      setMemberForm({ ...memberForm, phone: e.target.value })
+                    }
                     style={styles.input}
                   />
+
                   <input
                     type="text"
                     placeholder="WhatsApp"
@@ -710,16 +838,20 @@ export default function App() {
                     }
                     style={styles.input}
                   />
+
                   <button onClick={saveMember} style={styles.smallButton}>
                     {memberForm.id ? "Update Member" : "Add Member"}
                   </button>
+
                   <button onClick={resetMemberForm} style={styles.deleteButton}>
                     Clear
                   </button>
 
                   {members.map((item) => (
                     <div key={item.id} style={styles.card}>
-                      <strong>{item.name}</strong>
+                      <strong>
+                        {item.name} {item.section ? `- ${item.section}` : ""}
+                      </strong>
                       <div>
                         <button
                           onClick={() => setMemberForm(item)}
@@ -727,8 +859,11 @@ export default function App() {
                         >
                           Edit
                         </button>
+
                         <button
-                          onClick={() => setMembers((prev) => prev.filter((x) => x.id !== item.id))}
+                          onClick={() =>
+                            setMembers((prev) => prev.filter((x) => x.id !== item.id))
+                          }
                           style={styles.deleteButton}
                         >
                           Delete
@@ -740,37 +875,51 @@ export default function App() {
 
                 <div style={styles.adminBox}>
                   <h3 style={styles.subHeading}>Office Bearers</h3>
+
                   <input
                     type="text"
                     placeholder="Role"
                     value={officeForm.role}
-                    onChange={(e) => setOfficeForm({ ...officeForm, role: e.target.value })}
+                    onChange={(e) =>
+                      setOfficeForm({ ...officeForm, role: e.target.value })
+                    }
                     style={styles.input}
                   />
+
                   <input
                     type="text"
                     placeholder="Name"
                     value={officeForm.name}
-                    onChange={(e) => setOfficeForm({ ...officeForm, name: e.target.value })}
+                    onChange={(e) =>
+                      setOfficeForm({ ...officeForm, name: e.target.value })
+                    }
                     style={styles.input}
                   />
+
                   <input
                     type="text"
                     placeholder="Phone"
                     value={officeForm.phone}
-                    onChange={(e) => setOfficeForm({ ...officeForm, phone: e.target.value })}
+                    onChange={(e) =>
+                      setOfficeForm({ ...officeForm, phone: e.target.value })
+                    }
                     style={styles.input}
                   />
+
                   <input
                     type="text"
                     placeholder="WhatsApp"
                     value={officeForm.whatsapp}
-                    onChange={(e) => setOfficeForm({ ...officeForm, whatsapp: e.target.value })}
+                    onChange={(e) =>
+                      setOfficeForm({ ...officeForm, whatsapp: e.target.value })
+                    }
                     style={styles.input}
                   />
+
                   <button onClick={saveOffice} style={styles.smallButton}>
                     {officeForm.id ? "Update Office Bearer" : "Add Office Bearer"}
                   </button>
+
                   <button onClick={resetOfficeForm} style={styles.deleteButton}>
                     Clear
                   </button>
@@ -787,9 +936,12 @@ export default function App() {
                         >
                           Edit
                         </button>
+
                         <button
                           onClick={() =>
-                            setOfficeBearers((prev) => prev.filter((x) => x.id !== item.id))
+                            setOfficeBearers((prev) =>
+                              prev.filter((x) => x.id !== item.id)
+                            )
                           }
                           style={styles.deleteButton}
                         >
@@ -802,29 +954,40 @@ export default function App() {
 
                 <div style={styles.adminBox}>
                   <h3 style={styles.subHeading}>Noticeboard</h3>
+
                   <input
                     type="text"
                     placeholder="Title"
                     value={noticeForm.title}
-                    onChange={(e) => setNoticeForm({ ...noticeForm, title: e.target.value })}
+                    onChange={(e) =>
+                      setNoticeForm({ ...noticeForm, title: e.target.value })
+                    }
                     style={styles.input}
                   />
+
                   <input
                     type="text"
                     placeholder="Date"
                     value={noticeForm.date}
-                    onChange={(e) => setNoticeForm({ ...noticeForm, date: e.target.value })}
+                    onChange={(e) =>
+                      setNoticeForm({ ...noticeForm, date: e.target.value })
+                    }
                     style={styles.input}
                   />
+
                   <textarea
                     placeholder="Message"
                     value={noticeForm.message}
-                    onChange={(e) => setNoticeForm({ ...noticeForm, message: e.target.value })}
+                    onChange={(e) =>
+                      setNoticeForm({ ...noticeForm, message: e.target.value })
+                    }
                     style={styles.textarea}
                   />
+
                   <button onClick={saveNotice} style={styles.smallButton}>
                     {noticeForm.id ? "Update Notice" : "Add Notice"}
                   </button>
+
                   <button onClick={resetNoticeForm} style={styles.deleteButton}>
                     Clear
                   </button>
@@ -839,6 +1002,7 @@ export default function App() {
                         >
                           Edit
                         </button>
+
                         <button
                           onClick={() =>
                             setNoticeboardItems((prev) =>
@@ -856,35 +1020,49 @@ export default function App() {
 
                 <div style={styles.adminBox}>
                   <h3 style={styles.subHeading}>Tournament</h3>
+
                   <input
                     type="text"
                     placeholder="Title"
                     value={tournamentForm.title}
                     onChange={(e) =>
-                      setTournamentForm({ ...tournamentForm, title: e.target.value })
+                      setTournamentForm({
+                        ...tournamentForm,
+                        title: e.target.value,
+                      })
                     }
                     style={styles.input}
                   />
+
                   <input
                     type="text"
                     placeholder="Date"
                     value={tournamentForm.date}
                     onChange={(e) =>
-                      setTournamentForm({ ...tournamentForm, date: e.target.value })
+                      setTournamentForm({
+                        ...tournamentForm,
+                        date: e.target.value,
+                      })
                     }
                     style={styles.input}
                   />
+
                   <textarea
                     placeholder="Details"
                     value={tournamentForm.details}
                     onChange={(e) =>
-                      setTournamentForm({ ...tournamentForm, details: e.target.value })
+                      setTournamentForm({
+                        ...tournamentForm,
+                        details: e.target.value,
+                      })
                     }
                     style={styles.textarea}
                   />
+
                   <button onClick={saveTournament} style={styles.smallButton}>
                     {tournamentForm.id ? "Update Tournament" : "Add Tournament"}
                   </button>
+
                   <button onClick={resetTournamentForm} style={styles.deleteButton}>
                     Clear
                   </button>
@@ -899,9 +1077,12 @@ export default function App() {
                         >
                           Edit
                         </button>
+
                         <button
                           onClick={() =>
-                            setTournamentItems((prev) => prev.filter((x) => x.id !== item.id))
+                            setTournamentItems((prev) =>
+                              prev.filter((x) => x.id !== item.id)
+                            )
                           }
                           style={styles.deleteButton}
                         >
@@ -921,3 +1102,4 @@ export default function App() {
     </div>
   );
 }
+```
