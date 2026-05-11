@@ -5,8 +5,45 @@ const CLUB_NAME = "Victoria Bowling Club, Torrance";
 const DEFAULT_MEMBER_PIN = "1234";
 const DEFAULT_ADMIN_PIN = "2059";
 
+const SECTION_NAMES = {
+  home: "Home",
+  diary: "Diary",
+  notices: "Noticeboard",
+  competitions: "Competitions",
+  members: "Members",
+  office: "Office Bearers",
+  coaches: "Club Coaches",
+  documents: "Documents",
+  admin: "Admin",
+};
+
+const TABS = [
+  "home",
+  "diary",
+  "notices",
+  "competitions",
+  "members",
+  "office",
+  "coaches",
+  "documents",
+  "admin",
+];
+
 function nextId(items) {
   return items.length ? Math.max(...items.map((x) => x.id)) + 1 : 1;
+}
+
+function loadData(key, fallback) {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveData(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
 }
 
 const styles = {
@@ -14,7 +51,8 @@ const styles = {
     minHeight: "100vh",
     padding: 16,
     fontFamily: "Arial, sans-serif",
-    background: "linear-gradient(180deg, #112d5c 0%, #2b5f96 48%, #69c0e5 100%)",
+    background:
+      "linear-gradient(180deg, #112d5c 0%, #2b5f96 48%, #69c0e5 100%)",
     color: "#1f1f1f",
   },
   wrap: { maxWidth: 1180, margin: "0 auto" },
@@ -28,7 +66,8 @@ const styles = {
     boxShadow: "0 10px 24px rgba(0,0,0,0.22)",
   },
   header: {
-    background: "linear-gradient(135deg, #1b2f72 0%, #355f9d 55%, #68c1e6 100%)",
+    background:
+      "linear-gradient(135deg, #1b2f72 0%, #355f9d 55%, #68c1e6 100%)",
     color: "#ffffff",
     borderRadius: 20,
     padding: 18,
@@ -154,7 +193,6 @@ export default function App() {
   const [memberPin, setMemberPin] = useState(
     localStorage.getItem("victoria_member_pin") || DEFAULT_MEMBER_PIN
   );
-
   const [realAdminPin, setRealAdminPin] = useState(
     localStorage.getItem("victoria_admin_pin") || DEFAULT_ADMIN_PIN
   );
@@ -166,17 +204,42 @@ export default function App() {
 
   const [adminPin, setAdminPin] = useState("");
   const [adminUnlocked, setAdminUnlocked] = useState(false);
-
   const [newMemberPin, setNewMemberPin] = useState("");
   const [newAdminPin, setNewAdminPin] = useState("");
 
-  const [diaryItems, setDiaryItems] = useState([]);
-  const [diaryForm, setDiaryForm] = useState({
+  const [diaryItems, setDiaryItems] = useState(() =>
+    loadData("victoria_diary", [])
+  );
+  const [notices, setNotices] = useState(() =>
+    loadData("victoria_notices", [])
+  );
+  const [competitions, setCompetitions] = useState(() =>
+    loadData("victoria_competitions", [])
+  );
+  const [members, setMembers] = useState(() =>
+    loadData("victoria_members", [])
+  );
+  const [office, setOffice] = useState(() =>
+    loadData("victoria_office", [])
+  );
+  const [coaches, setCoaches] = useState(() =>
+    loadData("victoria_coaches", [])
+  );
+  const [documents, setDocuments] = useState(() =>
+    loadData("victoria_documents", [])
+  );
+
+  const [form, setForm] = useState({
     id: null,
     title: "",
     date: "",
     time: "",
     details: "",
+    name: "",
+    role: "",
+    phone: "",
+    email: "",
+    link: "",
   });
 
   const sortedDiary = useMemo(() => {
@@ -208,36 +271,207 @@ export default function App() {
       localStorage.setItem("victoria_member_pin", newMemberPin.trim());
       setMemberPin(newMemberPin.trim());
     }
-
     if (newAdminPin.trim()) {
       localStorage.setItem("victoria_admin_pin", newAdminPin.trim());
       setRealAdminPin(newAdminPin.trim());
     }
-
     setNewMemberPin("");
     setNewAdminPin("");
     setMessage("PINs updated.");
   };
 
-  const saveDiary = () => {
-    if (!diaryForm.title) return;
-
-    if (diaryForm.id) {
-      setDiaryItems((prev) =>
-        prev.map((x) => (x.id === diaryForm.id ? diaryForm : x))
-      );
-    } else {
-      setDiaryItems((prev) => [...prev, { ...diaryForm, id: nextId(prev) }]);
-    }
-
-    setDiaryForm({
+  const resetForm = () =>
+    setForm({
       id: null,
       title: "",
       date: "",
       time: "",
       details: "",
+      name: "",
+      role: "",
+      phone: "",
+      email: "",
+      link: "",
     });
+
+  const saveSectionItem = (section) => {
+    const setters = {
+      diary: [diaryItems, setDiaryItems, "victoria_diary"],
+      notices: [notices, setNotices, "victoria_notices"],
+      competitions: [competitions, setCompetitions, "victoria_competitions"],
+      members: [members, setMembers, "victoria_members"],
+      office: [office, setOffice, "victoria_office"],
+      coaches: [coaches, setCoaches, "victoria_coaches"],
+      documents: [documents, setDocuments, "victoria_documents"],
+    };
+
+    const [items, setter, key] = setters[section];
+
+    const newItem = form.id
+      ? form
+      : { ...form, id: nextId(items) };
+
+    const updated = form.id
+      ? items.map((x) => (x.id === form.id ? newItem : x))
+      : [...items, newItem];
+
+    setter(updated);
+    saveData(key, updated);
+    resetForm();
   };
+
+  const deleteSectionItem = (section, id) => {
+    const setters = {
+      diary: [diaryItems, setDiaryItems, "victoria_diary"],
+      notices: [notices, setNotices, "victoria_notices"],
+      competitions: [competitions, setCompetitions, "victoria_competitions"],
+      members: [members, setMembers, "victoria_members"],
+      office: [office, setOffice, "victoria_office"],
+      coaches: [coaches, setCoaches, "victoria_coaches"],
+      documents: [documents, setDocuments, "victoria_documents"],
+    };
+
+    const [items, setter, key] = setters[section];
+    const updated = items.filter((x) => x.id !== id);
+    setter(updated);
+    saveData(key, updated);
+  };
+
+  const renderList = (title, items) => (
+    <div style={styles.panel}>
+      <h2>{title}</h2>
+      {items.length === 0 ? (
+        <p>No items added yet.</p>
+      ) : (
+        items.map((item) => (
+          <div key={item.id} style={styles.card}>
+            {item.title && <h3>{item.title}</h3>}
+            {item.name && <h3>{item.name}</h3>}
+            {item.role && <p><strong>Role:</strong> {item.role}</p>}
+            {item.date && <p><strong>Date:</strong> {item.date}</p>}
+            {item.time && <p><strong>Time:</strong> {item.time}</p>}
+            {item.phone && <p><strong>Phone:</strong> {item.phone}</p>}
+            {item.email && <p><strong>Email:</strong> {item.email}</p>}
+            {item.details && <p>{item.details}</p>}
+            {item.link && (
+              <p>
+                <a href={item.link} target="_blank" rel="noreferrer">
+                  Open Document / Link
+                </a>
+              </p>
+            )}
+          </div>
+        ))
+      )}
+    </div>
+  );
+
+  const renderAdminSection = (section, items) => (
+    <>
+      <h3>{SECTION_NAMES[section]} Admin</h3>
+
+      <div style={styles.formBox}>
+        {["diary", "notices", "competitions", "documents"].includes(section) && (
+          <input
+            style={styles.input}
+            placeholder="Title"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+          />
+        )}
+
+        {section === "diary" && (
+          <>
+            <input
+              style={styles.input}
+              placeholder="Date"
+              value={form.date}
+              onChange={(e) => setForm({ ...form, date: e.target.value })}
+            />
+            <input
+              style={styles.input}
+              placeholder="Time"
+              value={form.time}
+              onChange={(e) => setForm({ ...form, time: e.target.value })}
+            />
+          </>
+        )}
+
+        {["members", "office", "coaches"].includes(section) && (
+          <>
+            <input
+              style={styles.input}
+              placeholder="Name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+            <input
+              style={styles.input}
+              placeholder="Role / Category"
+              value={form.role}
+              onChange={(e) => setForm({ ...form, role: e.target.value })}
+            />
+            <input
+              style={styles.input}
+              placeholder="Phone"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            />
+            <input
+              style={styles.input}
+              placeholder="Email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
+          </>
+        )}
+
+        {section === "documents" && (
+          <input
+            style={styles.input}
+            placeholder="Document link"
+            value={form.link}
+            onChange={(e) => setForm({ ...form, link: e.target.value })}
+          />
+        )}
+
+        <textarea
+          style={styles.textarea}
+          placeholder="Details"
+          value={form.details}
+          onChange={(e) => setForm({ ...form, details: e.target.value })}
+        />
+
+        <button
+          style={styles.smallButton}
+          onClick={() => saveSectionItem(section)}
+        >
+          {form.id ? "Update Item" : "Add Item"}
+        </button>
+
+        <button style={styles.deleteButton} onClick={resetForm}>
+          Clear Form
+        </button>
+      </div>
+
+      {items.map((item) => (
+        <div key={item.id} style={styles.card}>
+          <strong>{item.title || item.name || "Untitled item"}</strong>
+          <div>
+            <button style={styles.smallButton} onClick={() => setForm(item)}>
+              Edit
+            </button>
+            <button
+              style={styles.deleteButton}
+              onClick={() => deleteSectionItem(section, item.id)}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      ))}
+    </>
+  );
 
   if (!loggedIn) {
     return (
@@ -279,15 +513,19 @@ export default function App() {
         </div>
 
         <div style={styles.tabs}>
-          <button style={styles.tab(tab === "home")} onClick={() => setTab("home")}>
-            Home
-          </button>
-          <button style={styles.tab(tab === "diary")} onClick={() => setTab("diary")}>
-            Diary
-          </button>
-          <button style={styles.tab(tab === "admin")} onClick={() => setTab("admin")}>
-            Admin
-          </button>
+          {TABS.map((key) => (
+            <button
+              key={key}
+              style={styles.tab(tab === key)}
+              onClick={() => {
+                setTab(key);
+                resetForm();
+              }}
+            >
+              {SECTION_NAMES[key]}
+            </button>
+          ))}
+
           <button
             style={styles.tab(false)}
             onClick={() => {
@@ -310,32 +548,13 @@ export default function App() {
           </div>
         )}
 
-        {tab === "diary" && (
-          <div style={styles.panel}>
-            <h2>Diary</h2>
-
-            {sortedDiary.length === 0 ? (
-              <p>No diary items added yet.</p>
-            ) : (
-              sortedDiary.map((item) => (
-                <div key={item.id} style={styles.card}>
-                  <h3>{item.title}</h3>
-                  {item.date && (
-                    <p>
-                      <strong>Date:</strong> {item.date}
-                    </p>
-                  )}
-                  {item.time && (
-                    <p>
-                      <strong>Time:</strong> {item.time}
-                    </p>
-                  )}
-                  {item.details && <p>{item.details}</p>}
-                </div>
-              ))
-            )}
-          </div>
-        )}
+        {tab === "diary" && renderList("Diary", sortedDiary)}
+        {tab === "notices" && renderList("Noticeboard", notices)}
+        {tab === "competitions" && renderList("Competitions", competitions)}
+        {tab === "members" && renderList("Members", members)}
+        {tab === "office" && renderList("Office Bearers", office)}
+        {tab === "coaches" && renderList("Club Coaches", coaches)}
+        {tab === "documents" && renderList("Documents", documents)}
 
         {tab === "admin" && (
           <div style={styles.panel}>
@@ -357,7 +576,6 @@ export default function App() {
             {!adminUnlocked ? (
               <div style={styles.formBox}>
                 <h3>Unlock Admin Editing</h3>
-
                 <input
                   type="password"
                   placeholder="Enter Admin PIN"
@@ -365,20 +583,16 @@ export default function App() {
                   onChange={(e) => setAdminPin(e.target.value)}
                   style={styles.input}
                 />
-
                 <button onClick={handleAdminLogin} style={styles.button}>
                   Unlock Editing
                 </button>
-
                 {message && <p>{message}</p>}
               </div>
             ) : (
               <>
                 <div style={styles.formBox}>
                   <h3>Change PINs</h3>
-                  <p>
-                    Leave a box blank if you do not want to change that PIN.
-                  </p>
+                  <p>Leave a box blank if you do not want to change that PIN.</p>
 
                   <input
                     type="password"
@@ -403,75 +617,13 @@ export default function App() {
                   {message && <p>{message}</p>}
                 </div>
 
-                <h3>Diary Admin</h3>
-
-                <div style={styles.formBox}>
-                  <input
-                    style={styles.input}
-                    placeholder="Title"
-                    value={diaryForm.title}
-                    onChange={(e) =>
-                      setDiaryForm({ ...diaryForm, title: e.target.value })
-                    }
-                  />
-
-                  <input
-                    style={styles.input}
-                    placeholder="Date"
-                    value={diaryForm.date}
-                    onChange={(e) =>
-                      setDiaryForm({ ...diaryForm, date: e.target.value })
-                    }
-                  />
-
-                  <input
-                    style={styles.input}
-                    placeholder="Time"
-                    value={diaryForm.time}
-                    onChange={(e) =>
-                      setDiaryForm({ ...diaryForm, time: e.target.value })
-                    }
-                  />
-
-                  <textarea
-                    style={styles.textarea}
-                    placeholder="Details"
-                    value={diaryForm.details}
-                    onChange={(e) =>
-                      setDiaryForm({ ...diaryForm, details: e.target.value })
-                    }
-                  />
-
-                  <button style={styles.smallButton} onClick={saveDiary}>
-                    {diaryForm.id ? "Update Diary Item" : "Add Diary Item"}
-                  </button>
-                </div>
-
-                {sortedDiary.map((item) => (
-                  <div key={item.id} style={styles.card}>
-                    <strong>{item.title}</strong>
-
-                    <div>
-                      <button
-                        style={styles.smallButton}
-                        onClick={() => setDiaryForm(item)}
-                      >
-                        Edit
-                      </button>
-
-                      <button
-                        style={styles.deleteButton}
-                        onClick={() =>
-                          setDiaryItems((prev) =>
-                            prev.filter((x) => x.id !== item.id)
-                          )
-                        }
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                {renderAdminSection("diary", diaryItems)}
+                {renderAdminSection("notices", notices)}
+                {renderAdminSection("competitions", competitions)}
+                {renderAdminSection("members", members)}
+                {renderAdminSection("office", office)}
+                {renderAdminSection("coaches", coaches)}
+                {renderAdminSection("documents", documents)}
               </>
             )}
           </div>
