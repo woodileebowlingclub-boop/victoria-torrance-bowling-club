@@ -1,24 +1,12 @@
 import React, { useMemo, useState } from "react";
 import logo from "./assets/logo.png";
 
-const CLUB_PIN = "1234";
-const ADMIN_PIN = "2059";
 const CLUB_NAME = "Victoria Bowling Club, Torrance";
+const DEFAULT_MEMBER_PIN = "1234";
+const DEFAULT_ADMIN_PIN = "2059";
 
 function nextId(items) {
   return items.length ? Math.max(...items.map((x) => x.id)) + 1 : 1;
-}
-
-function phoneLink(number) {
-  if (!number) return "";
-  return `tel:${number.replace(/\s/g, "")}`;
-}
-
-function whatsappLink(number) {
-  if (!number) return "";
-  let clean = number.replace(/\s/g, "").replace("+", "");
-  if (clean.startsWith("0")) clean = "44" + clean.slice(1);
-  return `https://wa.me/${clean}`;
 }
 
 const styles = {
@@ -29,12 +17,7 @@ const styles = {
     background: "linear-gradient(180deg, #112d5c 0%, #2b5f96 48%, #69c0e5 100%)",
     color: "#1f1f1f",
   },
-
-  wrap: {
-    maxWidth: 1180,
-    margin: "0 auto",
-  },
-
+  wrap: { maxWidth: 1180, margin: "0 auto" },
   loginPanel: {
     maxWidth: 390,
     margin: "70px auto",
@@ -44,7 +27,6 @@ const styles = {
     textAlign: "center",
     boxShadow: "0 10px 24px rgba(0,0,0,0.22)",
   },
-
   header: {
     background: "linear-gradient(135deg, #1b2f72 0%, #355f9d 55%, #68c1e6 100%)",
     color: "#ffffff",
@@ -53,14 +35,12 @@ const styles = {
     marginBottom: 18,
     boxShadow: "0 10px 24px rgba(0,0,0,0.22)",
   },
-
   headerRow: {
     display: "flex",
     alignItems: "center",
     gap: 16,
     flexWrap: "wrap",
   },
-
   logo: {
     width: 78,
     height: 78,
@@ -69,24 +49,14 @@ const styles = {
     borderRadius: "50%",
     padding: 4,
   },
-
-  title: {
-    margin: 0,
-    fontSize: 30,
-  },
-
-  subtitle: {
-    margin: "6px 0 0 0",
-    fontSize: 16,
-  },
-
+  title: { margin: 0, fontSize: 30 },
+  subtitle: { margin: "6px 0 0 0", fontSize: 16 },
   tabs: {
     display: "flex",
     gap: 10,
     marginBottom: 18,
     flexWrap: "wrap",
   },
-
   tab: (active) => ({
     padding: "11px 18px",
     borderRadius: 10,
@@ -96,7 +66,6 @@ const styles = {
     fontWeight: "bold",
     cursor: "pointer",
   }),
-
   panel: {
     background: "#ffffff",
     borderRadius: 18,
@@ -104,7 +73,6 @@ const styles = {
     marginBottom: 18,
     boxShadow: "0 8px 20px rgba(0,0,0,0.16)",
   },
-
   card: {
     background: "#f8fbfd",
     border: "1px solid #d7e3ec",
@@ -112,7 +80,6 @@ const styles = {
     padding: 14,
     marginBottom: 12,
   },
-
   input: {
     width: "100%",
     padding: 12,
@@ -123,11 +90,9 @@ const styles = {
     fontSize: 16,
     backgroundColor: "#ffffff",
     color: "#000000",
-    outline: "none",
-    opacity: 1,
     WebkitTextFillColor: "#000000",
+    outline: "none",
   },
-
   textarea: {
     width: "100%",
     padding: 12,
@@ -141,10 +106,9 @@ const styles = {
     fontFamily: "Arial, sans-serif",
     backgroundColor: "#ffffff",
     color: "#000000",
-    outline: "none",
     WebkitTextFillColor: "#000000",
+    outline: "none",
   },
-
   button: {
     marginTop: 12,
     padding: "12px 16px",
@@ -153,34 +117,30 @@ const styles = {
     background: "#1b2f72",
     color: "#ffffff",
     fontWeight: "bold",
-    fontSize: 15,
     cursor: "pointer",
   },
-
   smallButton: {
     padding: "8px 12px",
     borderRadius: 8,
     border: "none",
     background: "#1b2f72",
-    color: "#fff",
+    color: "#ffffff",
     cursor: "pointer",
     fontWeight: "bold",
     marginRight: 8,
     marginTop: 8,
   },
-
   deleteButton: {
     padding: "8px 12px",
     borderRadius: 8,
     border: "none",
     background: "#9d1f2f",
-    color: "#fff",
+    color: "#ffffff",
     cursor: "pointer",
     fontWeight: "bold",
     marginRight: 8,
     marginTop: 8,
   },
-
   formBox: {
     background: "#eef7fc",
     border: "1px solid #cfe0ea",
@@ -188,15 +148,17 @@ const styles = {
     padding: 14,
     marginBottom: 18,
   },
-
-  whatsapp: {
-    color: "#128C7E",
-    fontWeight: "bold",
-    textDecoration: "none",
-  },
 };
 
 export default function App() {
+  const [memberPin, setMemberPin] = useState(
+    localStorage.getItem("victoria_member_pin") || DEFAULT_MEMBER_PIN
+  );
+
+  const [realAdminPin, setRealAdminPin] = useState(
+    localStorage.getItem("victoria_admin_pin") || DEFAULT_ADMIN_PIN
+  );
+
   const [pin, setPin] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
   const [message, setMessage] = useState("");
@@ -205,47 +167,15 @@ export default function App() {
   const [adminPin, setAdminPin] = useState("");
   const [adminUnlocked, setAdminUnlocked] = useState(false);
 
-  const [members, setMembers] = useState([]);
+  const [newMemberPin, setNewMemberPin] = useState("");
+  const [newAdminPin, setNewAdminPin] = useState("");
+
   const [diaryItems, setDiaryItems] = useState([]);
-  const [officeBearers, setOfficeBearers] = useState([]);
-  const [noticeboardItems, setNoticeboardItems] = useState([]);
-  const [tournamentItems, setTournamentItems] = useState([]);
-
-  const [memberForm, setMemberForm] = useState({
-    id: null,
-    name: "",
-    section: "",
-    phone: "",
-    whatsapp: "",
-  });
-
   const [diaryForm, setDiaryForm] = useState({
     id: null,
     title: "",
     date: "",
     time: "",
-    details: "",
-  });
-
-  const [officeForm, setOfficeForm] = useState({
-    id: null,
-    role: "",
-    name: "",
-    phone: "",
-    whatsapp: "",
-  });
-
-  const [noticeForm, setNoticeForm] = useState({
-    id: null,
-    title: "",
-    message: "",
-    date: "",
-  });
-
-  const [tournamentForm, setTournamentForm] = useState({
-    id: null,
-    title: "",
-    date: "",
     details: "",
   });
 
@@ -256,7 +186,7 @@ export default function App() {
   }, [diaryItems]);
 
   const handleLogin = () => {
-    if (pin === CLUB_PIN) {
+    if (pin === memberPin) {
       setLoggedIn(true);
       setMessage("");
     } else {
@@ -265,12 +195,28 @@ export default function App() {
   };
 
   const handleAdminLogin = () => {
-    if (adminPin === ADMIN_PIN) {
+    if (adminPin === realAdminPin) {
       setAdminUnlocked(true);
       setMessage("");
     } else {
       setMessage("Wrong admin PIN");
     }
+  };
+
+  const savePins = () => {
+    if (newMemberPin.trim()) {
+      localStorage.setItem("victoria_member_pin", newMemberPin.trim());
+      setMemberPin(newMemberPin.trim());
+    }
+
+    if (newAdminPin.trim()) {
+      localStorage.setItem("victoria_admin_pin", newAdminPin.trim());
+      setRealAdminPin(newAdminPin.trim());
+    }
+
+    setNewMemberPin("");
+    setNewAdminPin("");
+    setMessage("PINs updated.");
   };
 
   const saveDiary = () => {
@@ -281,10 +227,7 @@ export default function App() {
         prev.map((x) => (x.id === diaryForm.id ? diaryForm : x))
       );
     } else {
-      setDiaryItems((prev) => [
-        ...prev,
-        { ...diaryForm, id: nextId(prev) },
-      ]);
+      setDiaryItems((prev) => [...prev, { ...diaryForm, id: nextId(prev) }]);
     }
 
     setDiaryForm({
@@ -301,9 +244,7 @@ export default function App() {
       <div style={styles.page}>
         <div style={styles.loginPanel}>
           <img src={logo} alt="logo" style={styles.logo} />
-
           <h1>{CLUB_NAME}</h1>
-
           <p>Club App</p>
 
           <input
@@ -330,7 +271,6 @@ export default function App() {
         <div style={styles.header}>
           <div style={styles.headerRow}>
             <img src={logo} alt="logo" style={styles.logo} />
-
             <div>
               <h1 style={styles.title}>{CLUB_NAME}</h1>
               <p style={styles.subtitle}>Club App</p>
@@ -339,13 +279,28 @@ export default function App() {
         </div>
 
         <div style={styles.tabs}>
-          <button style={styles.tab(tab === "home")} onClick={() => setTab("home")}>Home</button>
-          <button style={styles.tab(tab === "diary")} onClick={() => setTab("diary")}>Diary</button>
-          <button style={styles.tab(tab === "members")} onClick={() => setTab("members")}>Members</button>
-          <button style={styles.tab(tab === "office")} onClick={() => setTab("office")}>Office Bearers</button>
-          <button style={styles.tab(tab === "noticeboard")} onClick={() => setTab("noticeboard")}>Noticeboard</button>
-          <button style={styles.tab(tab === "tournament")} onClick={() => setTab("tournament")}>Tournament</button>
-          <button style={styles.tab(tab === "admin")} onClick={() => setTab("admin")}>Admin</button>
+          <button style={styles.tab(tab === "home")} onClick={() => setTab("home")}>
+            Home
+          </button>
+          <button style={styles.tab(tab === "diary")} onClick={() => setTab("diary")}>
+            Diary
+          </button>
+          <button style={styles.tab(tab === "admin")} onClick={() => setTab("admin")}>
+            Admin
+          </button>
+          <button
+            style={styles.tab(false)}
+            onClick={() => {
+              setLoggedIn(false);
+              setPin("");
+              setAdminUnlocked(false);
+              setAdminPin("");
+              setTab("home");
+              setMessage("");
+            }}
+          >
+            Log Out
+          </button>
         </div>
 
         {tab === "home" && (
@@ -355,9 +310,49 @@ export default function App() {
           </div>
         )}
 
+        {tab === "diary" && (
+          <div style={styles.panel}>
+            <h2>Diary</h2>
+
+            {sortedDiary.length === 0 ? (
+              <p>No diary items added yet.</p>
+            ) : (
+              sortedDiary.map((item) => (
+                <div key={item.id} style={styles.card}>
+                  <h3>{item.title}</h3>
+                  {item.date && (
+                    <p>
+                      <strong>Date:</strong> {item.date}
+                    </p>
+                  )}
+                  {item.time && (
+                    <p>
+                      <strong>Time:</strong> {item.time}
+                    </p>
+                  )}
+                  {item.details && <p>{item.details}</p>}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
         {tab === "admin" && (
           <div style={styles.panel}>
             <h2>Admin</h2>
+
+            {adminUnlocked && (
+              <button
+                style={styles.deleteButton}
+                onClick={() => {
+                  setAdminUnlocked(false);
+                  setAdminPin("");
+                  setMessage("");
+                }}
+              >
+                Log Out Of Admin
+              </button>
+            )}
 
             {!adminUnlocked ? (
               <div style={styles.formBox}>
@@ -379,6 +374,35 @@ export default function App() {
               </div>
             ) : (
               <>
+                <div style={styles.formBox}>
+                  <h3>Change PINs</h3>
+                  <p>
+                    Leave a box blank if you do not want to change that PIN.
+                  </p>
+
+                  <input
+                    type="password"
+                    placeholder="New Members PIN"
+                    value={newMemberPin}
+                    onChange={(e) => setNewMemberPin(e.target.value)}
+                    style={styles.input}
+                  />
+
+                  <input
+                    type="password"
+                    placeholder="New Admin PIN"
+                    value={newAdminPin}
+                    onChange={(e) => setNewAdminPin(e.target.value)}
+                    style={styles.input}
+                  />
+
+                  <button style={styles.button} onClick={savePins}>
+                    Save New PINs
+                  </button>
+
+                  {message && <p>{message}</p>}
+                </div>
+
                 <h3>Diary Admin</h3>
 
                 <div style={styles.formBox}>
@@ -387,10 +411,7 @@ export default function App() {
                     placeholder="Title"
                     value={diaryForm.title}
                     onChange={(e) =>
-                      setDiaryForm({
-                        ...diaryForm,
-                        title: e.target.value,
-                      })
+                      setDiaryForm({ ...diaryForm, title: e.target.value })
                     }
                   />
 
@@ -399,10 +420,7 @@ export default function App() {
                     placeholder="Date"
                     value={diaryForm.date}
                     onChange={(e) =>
-                      setDiaryForm({
-                        ...diaryForm,
-                        date: e.target.value,
-                      })
+                      setDiaryForm({ ...diaryForm, date: e.target.value })
                     }
                   />
 
@@ -411,10 +429,7 @@ export default function App() {
                     placeholder="Time"
                     value={diaryForm.time}
                     onChange={(e) =>
-                      setDiaryForm({
-                        ...diaryForm,
-                        time: e.target.value,
-                      })
+                      setDiaryForm({ ...diaryForm, time: e.target.value })
                     }
                   />
 
@@ -423,15 +438,12 @@ export default function App() {
                     placeholder="Details"
                     value={diaryForm.details}
                     onChange={(e) =>
-                      setDiaryForm({
-                        ...diaryForm,
-                        details: e.target.value,
-                      })
+                      setDiaryForm({ ...diaryForm, details: e.target.value })
                     }
                   />
 
                   <button style={styles.smallButton} onClick={saveDiary}>
-                    Add Diary Item
+                    {diaryForm.id ? "Update Diary Item" : "Add Diary Item"}
                   </button>
                 </div>
 
