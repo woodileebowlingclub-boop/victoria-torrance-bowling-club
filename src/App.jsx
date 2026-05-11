@@ -240,6 +240,8 @@ export default function App() {
     phone: "",
     email: "",
     link: "",
+    fileName: "",
+    fileData: "",
   });
 
   const sortedDiary = useMemo(() => {
@@ -271,10 +273,12 @@ export default function App() {
       localStorage.setItem("victoria_member_pin", newMemberPin.trim());
       setMemberPin(newMemberPin.trim());
     }
+
     if (newAdminPin.trim()) {
       localStorage.setItem("victoria_admin_pin", newAdminPin.trim());
       setRealAdminPin(newAdminPin.trim());
     }
+
     setNewMemberPin("");
     setNewAdminPin("");
     setMessage("PINs updated.");
@@ -292,7 +296,26 @@ export default function App() {
       phone: "",
       email: "",
       link: "",
+      fileName: "",
+      fileData: "",
     });
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      setForm((prev) => ({
+        ...prev,
+        fileName: file.name,
+        fileData: reader.result,
+      }));
+    };
+
+    reader.readAsDataURL(file);
+  };
 
   const saveSectionItem = (section) => {
     const setters = {
@@ -307,9 +330,7 @@ export default function App() {
 
     const [items, setter, key] = setters[section];
 
-    const newItem = form.id
-      ? form
-      : { ...form, id: nextId(items) };
+    const newItem = form.id ? form : { ...form, id: nextId(items) };
 
     const updated = form.id
       ? items.map((x) => (x.id === form.id ? newItem : x))
@@ -333,6 +354,7 @@ export default function App() {
 
     const [items, setter, key] = setters[section];
     const updated = items.filter((x) => x.id !== id);
+
     setter(updated);
     saveData(key, updated);
   };
@@ -340,6 +362,7 @@ export default function App() {
   const renderList = (title, items) => (
     <div style={styles.panel}>
       <h2>{title}</h2>
+
       {items.length === 0 ? (
         <p>No items added yet.</p>
       ) : (
@@ -347,16 +370,51 @@ export default function App() {
           <div key={item.id} style={styles.card}>
             {item.title && <h3>{item.title}</h3>}
             {item.name && <h3>{item.name}</h3>}
-            {item.role && <p><strong>Role:</strong> {item.role}</p>}
-            {item.date && <p><strong>Date:</strong> {item.date}</p>}
-            {item.time && <p><strong>Time:</strong> {item.time}</p>}
-            {item.phone && <p><strong>Phone:</strong> {item.phone}</p>}
-            {item.email && <p><strong>Email:</strong> {item.email}</p>}
+
+            {item.role && (
+              <p>
+                <strong>Role:</strong> {item.role}
+              </p>
+            )}
+
+            {item.date && (
+              <p>
+                <strong>Date:</strong> {item.date}
+              </p>
+            )}
+
+            {item.time && (
+              <p>
+                <strong>Time:</strong> {item.time}
+              </p>
+            )}
+
+            {item.phone && (
+              <p>
+                <strong>Phone:</strong> {item.phone}
+              </p>
+            )}
+
+            {item.email && (
+              <p>
+                <strong>Email:</strong> {item.email}
+              </p>
+            )}
+
             {item.details && <p>{item.details}</p>}
+
             {item.link && (
               <p>
                 <a href={item.link} target="_blank" rel="noreferrer">
                   Open Document / Link
+                </a>
+              </p>
+            )}
+
+            {item.fileData && (
+              <p>
+                <a href={item.fileData} target="_blank" rel="noreferrer">
+                  Open File: {item.fileName || "Attached File"}
                 </a>
               </p>
             )}
@@ -371,7 +429,9 @@ export default function App() {
       <h3>{SECTION_NAMES[section]} Admin</h3>
 
       <div style={styles.formBox}>
-        {["diary", "notices", "competitions", "documents"].includes(section) && (
+        {["diary", "notices", "competitions", "documents"].includes(
+          section
+        ) && (
           <input
             style={styles.input}
             placeholder="Title"
@@ -388,6 +448,7 @@ export default function App() {
               value={form.date}
               onChange={(e) => setForm({ ...form, date: e.target.value })}
             />
+
             <input
               style={styles.input}
               placeholder="Time"
@@ -405,18 +466,21 @@ export default function App() {
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
+
             <input
               style={styles.input}
               placeholder="Role / Category"
               value={form.role}
               onChange={(e) => setForm({ ...form, role: e.target.value })}
             />
+
             <input
               style={styles.input}
               placeholder="Phone"
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
             />
+
             <input
               style={styles.input}
               placeholder="Email"
@@ -433,6 +497,36 @@ export default function App() {
             value={form.link}
             onChange={(e) => setForm({ ...form, link: e.target.value })}
           />
+        )}
+
+        {["diary", "notices", "competitions", "documents"].includes(
+          section
+        ) && (
+          <>
+            <input type="file" style={styles.input} onChange={handleFileUpload} />
+
+            {form.fileName && (
+              <p>
+                <strong>Selected file:</strong> {form.fileName}
+              </p>
+            )}
+
+            {form.fileData && (
+              <button
+                type="button"
+                style={styles.deleteButton}
+                onClick={() =>
+                  setForm({
+                    ...form,
+                    fileName: "",
+                    fileData: "",
+                  })
+                }
+              >
+                Remove File
+              </button>
+            )}
+          </>
         )}
 
         <textarea
@@ -457,10 +551,18 @@ export default function App() {
       {items.map((item) => (
         <div key={item.id} style={styles.card}>
           <strong>{item.title || item.name || "Untitled item"}</strong>
+
+          {item.fileName && (
+            <p>
+              <strong>File:</strong> {item.fileName}
+            </p>
+          )}
+
           <div>
             <button style={styles.smallButton} onClick={() => setForm(item)}>
               Edit
             </button>
+
             <button
               style={styles.deleteButton}
               onClick={() => deleteSectionItem(section, item.id)}
@@ -576,6 +678,7 @@ export default function App() {
             {!adminUnlocked ? (
               <div style={styles.formBox}>
                 <h3>Unlock Admin Editing</h3>
+
                 <input
                   type="password"
                   placeholder="Enter Admin PIN"
@@ -583,9 +686,11 @@ export default function App() {
                   onChange={(e) => setAdminPin(e.target.value)}
                   style={styles.input}
                 />
+
                 <button onClick={handleAdminLogin} style={styles.button}>
                   Unlock Editing
                 </button>
+
                 {message && <p>{message}</p>}
               </div>
             ) : (
